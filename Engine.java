@@ -58,20 +58,28 @@ public class Engine
   {
     calculateFOV(w, h);
     ArrayList<Triangle> projectedTriangles = new ArrayList<Triangle>();
+    int offset = 10;
     for (Mesh m : meshes)
     {
       for (Triangle triangle : m.getTris())
       {
         Triangle projectedTriangle;
-        Vector3D point1 = multiplyMatrixVector(triangle.getVectors()[0], projectionMatrix);    
-        Vector3D point2 = multiplyMatrixVector(triangle.getVectors()[1], projectionMatrix);     
-        Vector3D point3 = multiplyMatrixVector(triangle.getVectors()[2], projectionMatrix); 
-        Vector3D rotated1 = multiplyMatrixVector(point1, rotationXMatrix);
-        Vector3D rotated2 = multiplyMatrixVector(point2, rotationXMatrix);
-        Vector3D rotated3 = multiplyMatrixVector(point3, rotationXMatrix);
-        projectedTriangle = new Triangle(rotated1, rotated2, rotated3);
+        Vector3D rotated1 = multiplyMatrixVector(triangle.getVectors()[0], rotationXMatrix);
+        Vector3D rotated2 = multiplyMatrixVector(triangle.getVectors()[1], rotationXMatrix);
+        Vector3D rotated3 = multiplyMatrixVector(triangle.getVectors()[2], rotationXMatrix);
+        Vector3D rotated4 = multiplyMatrixVector(rotated1, rotationZMatrix);
+        Vector3D rotated5 = multiplyMatrixVector(rotated2, rotationZMatrix);
+        Vector3D rotated6 = multiplyMatrixVector(rotated3, rotationZMatrix);
+        rotated4.setZ(rotated4.z() + offset);
+        rotated5.setZ(rotated5.z() + offset);
+        rotated6.setZ(rotated6.z() + offset);
+        Vector3D point1 = multiplyMatrixVector(rotated4, projectionMatrix);    
+        Vector3D point2 = multiplyMatrixVector(rotated5, projectionMatrix);     
+        Vector3D point3 = multiplyMatrixVector(rotated6, projectionMatrix); 
+        projectedTriangle = new Triangle(point1, point2, point3);
         projectedTriangles.add(projectedTriangle);
-        rotationXMatrix.setDegree(rotationXMatrix.getDegree() + 10);
+        rotationXMatrix.setDegree(rotationXMatrix.getDegree() + 0.01);
+        rotationZMatrix.setDegree(rotationZMatrix.getDegree() + 0.1);
       }
     }
     return projectedTriangles;
@@ -117,14 +125,6 @@ public class Engine
     cube.addTris(bottom1);
     cube.addTris(bottom2);
 
-    for (Triangle t : cube.getTris())
-    {
-      for (Vector3D v : t.getVectors())
-      {
-        v.setZ(v.z() + 3);
-        v.setX(v.x());
-      }
-    }
     return cube;
   }
 }
