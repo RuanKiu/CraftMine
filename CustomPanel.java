@@ -15,6 +15,7 @@ public class CustomPanel extends JPanel implements ActionListener
     setSize(1000, 1000);
     time = new Timer(15, this);
     engine = new Engine();
+    time.start();
   }
 
   public void actionPerformed(ActionEvent e)

@@ -3,26 +3,36 @@ public class Engine
 {
   private Camera camera;
   private double aspectRatio;
-  private double fovRadians;
+  private double fovRadiansHorizontal, fovRadiansVertical;
   private Matrix4x4 projectionMatrix;
+  private RotationMatrix4x4 rotationXMatrix, rotationZMatrix;
   private ArrayList<Mesh> meshes;
   public Engine()
   {
-    Mesh meshCube = createCube(); 
     camera = new Camera();
     projectionMatrix = new Matrix4x4();
-    aspectRatio = 1080.0/1920.0;
-    fovRadians = 1.0 / Math.tan(camera.getFOV() * 0.5 / 180.0 * 3.14159);
-    projectionMatrix.setValue(0, 0, aspectRatio * fovRadians);
-    projectionMatrix.setValue(1, 1, fovRadians);
+    fovRadiansVertical = 1.0 / Math.tan(camera.getVerticalFOV() * 0.5 / 180.0 * 3.14159);
+    calculateFOV(1920, 1080); 
+    meshes = new ArrayList<Mesh>();
+
+    // Projection matrix
+    projectionMatrix.setValue(0, 0, fovRadiansHorizontal);
+    projectionMatrix.setValue(1, 1, fovRadiansVertical);
     projectionMatrix.setValue(2, 2, camera.getFar() / (camera.getFar() - camera.getNear()));
     projectionMatrix.setValue(3, 2, (-camera.getFar() * camera.getNear()) / (camera.getFar() - camera.getNear()));
     projectionMatrix.setValue(2, 3, 1.0);
     projectionMatrix.setValue(3, 3, 0.0); 
-    meshes = new ArrayList<Mesh>();
+    
+    // Rotation matrix
+
+    rotationXMatrix = new RotationMatrix4x4(1, "x");
+    rotationZMatrix = new RotationMatrix4x4(2, "z");
+
+    // Adding a cube
+    Mesh meshCube = createCube(); 
     meshes.add(meshCube);
   }
-  private Vector3D MultiplyMatrixVector(Vector3D vector, Matrix4x4 matrix)
+  private Vector3D multiplyMatrixVector(Vector3D vector, Matrix4x4 matrix)
   {
     Vector3D output = new Vector3D();
     output.setX(vector.x() * matrix.getValue(0, 0) + vector.y() * matrix.getValue(1, 0) + vector.z() * matrix.getValue(2, 0) + matrix.getValue(3, 0)); 
@@ -37,24 +47,31 @@ public class Engine
     }
     return output;
   }
+  private void calculateFOV(double w, double h)
+  {
+    aspectRatio = h/w;
+    double verticalFOV = Math.atan(Math.tan(Math.toRadians(camera.getVerticalFOV()/2))*(w/h)); 
+    fovRadiansHorizontal = 1.0 / Math.tan(verticalFOV);
+    projectionMatrix.setValue(0, 0, fovRadiansHorizontal);
+  }
   public ArrayList<Triangle> createProjections(double w, double h)
   {
-    aspectRatio = w/h;
-    
-    projectionMatrix.setValue(0, 0, aspectRatio * fovRadians);
+    calculateFOV(w, h);
     ArrayList<Triangle> projectedTriangles = new ArrayList<Triangle>();
-    int count = 0;
     for (Mesh m : meshes)
     {
       for (Triangle triangle : m.getTris())
       {
         Triangle projectedTriangle;
-        Vector3D point1 = MultiplyMatrixVector(triangle.getVectors()[0], projectionMatrix);     
-        Vector3D point2 = MultiplyMatrixVector(triangle.getVectors()[1], projectionMatrix);     
-        Vector3D point3 = MultiplyMatrixVector(triangle.getVectors()[2], projectionMatrix);     
-        projectedTriangle = new Triangle(point1, point2, point3);
+        Vector3D point1 = multiplyMatrixVector(triangle.getVectors()[0], projectionMatrix);    
+        Vector3D point2 = multiplyMatrixVector(triangle.getVectors()[1], projectionMatrix);     
+        Vector3D point3 = multiplyMatrixVector(triangle.getVectors()[2], projectionMatrix); 
+        Vector3D rotated1 = multiplyMatrixVector(point1, rotationXMatrix);
+        Vector3D rotated2 = multiplyMatrixVector(point2, rotationXMatrix);
+        Vector3D rotated3 = multiplyMatrixVector(point3, rotationXMatrix);
+        projectedTriangle = new Triangle(rotated1, rotated2, rotated3);
         projectedTriangles.add(projectedTriangle);
-        count++;
+        rotationXMatrix.setDegree(rotationXMatrix.getDegree() + 10);
       }
     }
     return projectedTriangles;
@@ -104,8 +121,8 @@ public class Engine
     {
       for (Vector3D v : t.getVectors())
       {
-        v.setZ(v.z() + 30);
-        v.setX(v.x() + 10);
+        v.setZ(v.z() + 3);
+        v.setX(v.x());
       }
     }
     return cube;
