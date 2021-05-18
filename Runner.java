@@ -22,11 +22,13 @@ public class Runner
 class CustomPanel extends JPanel implements ActionListener
 {
   private Timer time;
+  private Engine engine;
   public CustomPanel()
   {
     setVisible(true);
     setSize(1000, 1000);
     time = new Timer(15, this);
+    engine = new Engine();
   }
 
   public void actionPerformed(ActionEvent e)
@@ -37,6 +39,27 @@ class CustomPanel extends JPanel implements ActionListener
   public void paintComponent(Graphics g)
   {
     super.paintComponent(g);
+    ArrayList<Triangle> triangles = engine.createProjections(getWidth(), getHeight());
+    for (Triangle triangle : triangles)
+    {
+      paintTriangle(g, triangle);
+    }
+  }
+  public void paintTriangle(Graphics g, Triangle triangle)
+  {
+    double x1 = triangle.getVectors()[0].x();
+    double y1 = triangle.getVectors()[0].y();
+    double x2 = triangle.getVectors()[1].x();
+    double y2 = triangle.getVectors()[1].y();
+    double x3 = triangle.getVectors()[2].x();
+    double y3 = triangle.getVectors()[2].y();
+
+    x1 += 1.0; y1 += 1.0; x2 += 1.0; y2 += 1.0; x3 += 1.0; y3 += 1.0;
+    x1 *= getWidth() * 0.5; y1 *= 0.5 *  getHeight(); x2 *= getWidth() * 0.5; y2 *= 0.5 * getHeight(); x3 *= getWidth() * 0.5; y3 *= 0.5 *  getHeight();
+
+    g.drawLine((int)x1, (int)y1, (int)x2, (int)y2);
+    g.drawLine((int)x2, (int)y2, (int)x3, (int)y3);
+    g.drawLine((int)x3, (int)y3, (int)x1, (int)y1);
   }
 }
 class Matrix4x4
@@ -72,7 +95,7 @@ class Engine
     camera = new Camera();
     projectionMatrix = new Matrix4x4();
     aspectRatio = 1080.0/1920.0;
-    fovRadians = 1.0 / Math.tan(camera.getFOV() * 0.5);
+    fovRadians = 1.0 / Math.tan(camera.getFOV() * 0.5 / 180.0 * 3.14159);
     projectionMatrix.setValue(0, 0, aspectRatio * fovRadians);
     projectionMatrix.setValue(1, 1, fovRadians);
     projectionMatrix.setValue(2, 2, camera.getFar() / (camera.getFar() - camera.getNear()));
@@ -87,7 +110,7 @@ class Engine
     Vector3D output = new Vector3D();
     output.setX(vector.x() * matrix.getValue(0, 0) + vector.y() * matrix.getValue(1, 0) + vector.z() * matrix.getValue(2, 0) + matrix.getValue(3, 0)); 
     output.setY(vector.x() * matrix.getValue(0, 1) + vector.y() * matrix.getValue(1, 1) + vector.z() * matrix.getValue(2, 1) + matrix.getValue(3, 1)); 
-    output.setY(vector.x() * matrix.getValue(0, 2) + vector.y() * matrix.getValue(1, 2) + vector.z() * matrix.getValue(2, 2) + matrix.getValue(3, 2)); 
+    output.setZ(vector.x() * matrix.getValue(0, 2) + vector.y() * matrix.getValue(1, 2) + vector.z() * matrix.getValue(2, 2) + matrix.getValue(3, 2)); 
     double w = vector.x() * matrix.getValue(0, 3) + vector.y() * matrix.getValue(1, 3) + vector.z() * matrix.getValue(2, 3) + matrix.getValue(3, 3);
 
     if (w != 0) {
@@ -97,9 +120,13 @@ class Engine
     }
     return output;
   }
-  public void render(double w, double h, Graphics g)
+  public ArrayList<Triangle> createProjections(double w, double h)
   {
-    aspectRatio = h/w;
+    aspectRatio = w/h;
+    
+    projectionMatrix.setValue(0, 0, aspectRatio * fovRadians);
+    ArrayList<Triangle> projectedTriangles = new ArrayList<Triangle>();
+    int count = 0;
     for (Mesh m : meshes)
     {
       for (Triangle triangle : m.getTris())
@@ -109,8 +136,11 @@ class Engine
         Vector3D point2 = MultiplyMatrixVector(triangle.getVectors()[1], projectionMatrix);     
         Vector3D point3 = MultiplyMatrixVector(triangle.getVectors()[2], projectionMatrix);     
         projectedTriangle = new Triangle(point1, point2, point3);
+        projectedTriangles.add(projectedTriangle);
+        count++;
       }
     }
+    return projectedTriangles;
   }
   public Mesh createCube()
   {
@@ -184,6 +214,10 @@ class Camera
   public double getFar()
   {
     return far;
+  }
+  public void setFOV(double f)
+  {
+    fov = f;
   }
 }
 class Triangle
