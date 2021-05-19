@@ -1,16 +1,18 @@
-public class Camera
+public class Camera extends Vector3D
 {
-  private double x;
-  private double y;
-  private double z;
   private double fovV;
   private double near;
   private double far;
   public Camera()
   {
-    x = 0.0;
-    y = 0.0;
-    z = 0.0;
+    super();
+    fovV = 68;
+    near = 0.1;
+    far = 1000.0;
+  }
+  public Camera(double x, double y, double z)
+  {
+    super(x, y, z);
     fovV = 68;
     near = 0.1;
     far = 1000.0;

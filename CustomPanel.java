@@ -2,19 +2,25 @@ import javax.swing.JPanel;
 import javax.swing.Timer;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import java.awt.Graphics2D;
 import java.awt.Graphics;
+import java.awt.Polygon;
+import java.awt.BasicStroke;
+import java.awt.Color;
 import java.util.ArrayList;
 
 public class CustomPanel extends JPanel implements ActionListener
 {
   private Timer time;
   private Engine engine;
+  private BasicStroke stroke;
   public CustomPanel()
   {
     setVisible(true);
     setSize(1000, 1000);
-    time = new Timer(15, this);
+    time = new Timer(10, this);
     engine = new Engine();
+    stroke = new BasicStroke(2, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
     time.start();
   }
 
@@ -26,13 +32,16 @@ public class CustomPanel extends JPanel implements ActionListener
   public void paintComponent(Graphics g)
   {
     super.paintComponent(g);
+    Graphics2D g2 = (Graphics2D) g;
+    g2.setStroke(stroke);
+    g2.setColor(Color.BLACK);
     ArrayList<Triangle> triangles = engine.createProjections(getWidth(), getHeight());
     for (Triangle triangle : triangles)
     {
-      paintTriangle(g, triangle);
+      paintTriangle(g2, triangle);
     }
   }
-  public void paintTriangle(Graphics g, Triangle triangle)
+  public void paintTriangle(Graphics2D g2, Triangle triangle)
   {
     double x1 = triangle.getVectors()[0].x();
     double y1 = triangle.getVectors()[0].y();
@@ -44,8 +53,11 @@ public class CustomPanel extends JPanel implements ActionListener
     x1 += 1.0; y1 += 1.0; x2 += 1.0; y2 += 1.0; x3 += 1.0; y3 += 1.0;
     x1 *= getWidth() * 0.5; y1 *= 0.5 *  getHeight(); x2 *= getWidth() * 0.5; y2 *= 0.5 * getHeight(); x3 *= getWidth() * 0.5; y3 *= 0.5 *  getHeight();
 
-    g.drawLine((int)x1, (int)y1, (int)x2, (int)y2);
-    g.drawLine((int)x2, (int)y2, (int)x3, (int)y3);
-    g.drawLine((int)x3, (int)y3, (int)x1, (int)y1);
+    Polygon p = new Polygon();
+    p.addPoint((int) x1, (int) y1);
+    p.addPoint((int) x2, (int) y2);
+    p.addPoint((int) x3, (int) y3);
+    g2.fillPolygon(p);
+    g2.drawPolygon(p);
   }
 }

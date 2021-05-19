@@ -63,23 +63,60 @@ public class Engine
     {
       for (Triangle triangle : m.getTris())
       {
-        Triangle projectedTriangle;
+        ShadedTriangle projectedTriangle;
         Vector3D rotated1 = multiplyMatrixVector(triangle.getVectors()[0], rotationXMatrix);
         Vector3D rotated2 = multiplyMatrixVector(triangle.getVectors()[1], rotationXMatrix);
         Vector3D rotated3 = multiplyMatrixVector(triangle.getVectors()[2], rotationXMatrix);
-        Vector3D rotated4 = multiplyMatrixVector(rotated1, rotationZMatrix);
-        Vector3D rotated5 = multiplyMatrixVector(rotated2, rotationZMatrix);
-        Vector3D rotated6 = multiplyMatrixVector(rotated3, rotationZMatrix);
-        rotated4.setZ(rotated4.z() + offset);
-        rotated5.setZ(rotated5.z() + offset);
-        rotated6.setZ(rotated6.z() + offset);
-        Vector3D point1 = multiplyMatrixVector(rotated4, projectionMatrix);    
-        Vector3D point2 = multiplyMatrixVector(rotated5, projectionMatrix);     
-        Vector3D point3 = multiplyMatrixVector(rotated6, projectionMatrix); 
-        projectedTriangle = new Triangle(point1, point2, point3);
-        projectedTriangles.add(projectedTriangle);
-        rotationXMatrix.setDegree(rotationXMatrix.getDegree() + 0.01);
-        rotationZMatrix.setDegree(rotationZMatrix.getDegree() + 0.1);
+        Vector3D transformed0 = multiplyMatrixVector(rotated1, rotationZMatrix);
+        Vector3D transformed1 = multiplyMatrixVector(rotated2, rotationZMatrix);
+        Vector3D transformed2 = multiplyMatrixVector(rotated3, rotationZMatrix);
+        transformed0.setZ(transformed0.z() + offset);
+        transformed1.setZ(transformed1.z() + offset);
+        transformed2.setZ(transformed2.z() + offset);
+        
+        Vector3D normal = new Vector3D();
+        Vector3D line1 = new Vector3D();
+        Vector3D line2 = new Vector3D();
+
+
+        line1.setX(transformed1.x() - transformed0.x());
+        line1.setY(transformed1.y() - transformed0.y());
+        line1.setZ(transformed1.z() - transformed0.z());
+        
+        line2.setX(transformed2.x() - transformed0.x());
+        line2.setY(transformed2.y() - transformed0.y());
+        line2.setZ(transformed2.z() - transformed0.z());
+
+        normal.setX(line1.y() * line2.z() - line1.z() * line2.y());
+        normal.setY(line1.z() * line2.x() - line1.x() * line2.z());
+        normal.setZ(line1.x() * line2.y() - line1.y() * line2.x()); 
+        
+        double l = Math.sqrt(normal.x() * normal.x() + normal.y() * normal.y() + normal.z() * normal.z());
+        normal.setX(normal.x() / l);
+        normal.setY(normal.y() / l);
+        normal.setZ(normal.z() / l);
+
+        if (normal.x() * (transformed0.x() - camera.x()) +
+            normal.y() * (transformed0.y() - camera.y()) +
+            normal.z() * (transformed0.z() - camera.z()) < 0
+          )
+        {
+          Vector3D lightDirection = new Vector3D(0, 0, 1);
+          double l2 = Math.sqrt(lightDirection.x() * lightDirection.x() + lightDirection.y() * lightDirection.y() + lightDirection.z() * lightDirection.z());
+          lightDirection.setX(lightDirection.x() / l2);
+          lightDirection.setY(lightDirection.y() / l2);
+          lightDirection.setZ(lightDirection.z() / l2);
+
+          double dp = normal.x() * lightDirection.x() + normal.y() * lightDirection.y() + normal.z() * lightDirection.z();
+
+          Vector3D point1 = multiplyMatrixVector(transformed0, projectionMatrix);    
+          Vector3D point2 = multiplyMatrixVector(transformed1, projectionMatrix);     
+          Vector3D point3 = multiplyMatrixVector(transformed2, projectionMatrix); 
+          projectedTriangle = new ShadedTriangle(point1, point2, point3, dp);
+          projectedTriangles.add(projectedTriangle);
+          rotationXMatrix.setDegree(rotationXMatrix.getDegree() + 0.1);
+          rotationZMatrix.setDegree(rotationZMatrix.getDegree() + 0.05);
+        }
       }
     }
     return projectedTriangles;
