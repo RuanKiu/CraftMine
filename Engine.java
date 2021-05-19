@@ -7,6 +7,7 @@ public class Engine
   private Matrix4x4 projectionMatrix;
   private RotationMatrix4x4 rotationXMatrix, rotationZMatrix;
   private ArrayList<Mesh> meshes;
+  private WorldLight worldLightDirection;
   public Engine()
   {
     camera = new Camera();
@@ -14,6 +15,7 @@ public class Engine
     fovRadiansVertical = 1.0 / Math.tan(camera.getVerticalFOV() * 0.5 / 180.0 * 3.14159);
     calculateFOV(1920, 1080); 
     meshes = new ArrayList<Mesh>();
+    worldLightDirection = new WorldLight(-1, -.05, 1);
 
     // Projection matrix
     projectionMatrix.setValue(0, 0, fovRadiansHorizontal);
@@ -31,6 +33,11 @@ public class Engine
     // Adding a cube
     Mesh meshCube = createCube(); 
     meshes.add(meshCube);
+
+    // Adding a chunk
+    Chunk c = new Chunk();
+    Mesh meshChunk = createChunk(c);
+    meshes.add(meshChunk);
   }
   private Vector3D multiplyMatrixVector(Vector3D vector, Matrix4x4 matrix)
   {
@@ -54,11 +61,12 @@ public class Engine
     fovRadiansHorizontal = 1.0 / Math.tan(verticalFOV);
     projectionMatrix.setValue(0, 0, fovRadiansHorizontal);
   }
-  public ArrayList<Triangle> createProjections(double w, double h)
+  public ArrayList<ShadedTriangle> createProjections(double w, double h)
   {
     calculateFOV(w, h);
-    ArrayList<Triangle> projectedTriangles = new ArrayList<Triangle>();
-    int offset = 10;
+    ArrayList<ShadedTriangle> projectedTriangles = new ArrayList<ShadedTriangle>();
+    int offset = 0;
+    int offsetY = 5;
     for (Mesh m : meshes)
     {
       for (Triangle triangle : m.getTris())
@@ -71,8 +79,11 @@ public class Engine
         Vector3D transformed1 = multiplyMatrixVector(rotated2, rotationZMatrix);
         Vector3D transformed2 = multiplyMatrixVector(rotated3, rotationZMatrix);
         transformed0.setZ(transformed0.z() + offset);
+        transformed0.setY(transformed0.y() + offsetY);
         transformed1.setZ(transformed1.z() + offset);
+        transformed1.setY(transformed1.y() + offsetY);
         transformed2.setZ(transformed2.z() + offset);
+        transformed2.setY(transformed2.y() + offsetY);
         
         Vector3D normal = new Vector3D();
         Vector3D line1 = new Vector3D();
@@ -101,21 +112,20 @@ public class Engine
             normal.z() * (transformed0.z() - camera.z()) < 0
           )
         {
-          Vector3D lightDirection = new Vector3D(0, 0, 1);
-          double l2 = Math.sqrt(lightDirection.x() * lightDirection.x() + lightDirection.y() * lightDirection.y() + lightDirection.z() * lightDirection.z());
-          lightDirection.setX(lightDirection.x() / l2);
-          lightDirection.setY(lightDirection.y() / l2);
-          lightDirection.setZ(lightDirection.z() / l2);
+          double l2 = Math.sqrt(worldLightDirection.x() * worldLightDirection.x() + worldLightDirection.y() * worldLightDirection.y() + worldLightDirection.z() * worldLightDirection.z());
+          worldLightDirection.setX(worldLightDirection.x() / l2);
+          worldLightDirection.setY(worldLightDirection.y() / l2);
+          worldLightDirection.setZ(worldLightDirection.z() / l2);
 
-          double dp = normal.x() * lightDirection.x() + normal.y() * lightDirection.y() + normal.z() * lightDirection.z();
+          double dp = normal.x() * worldLightDirection.x() + normal.y() * worldLightDirection.y() + normal.z() * worldLightDirection.z();
 
           Vector3D point1 = multiplyMatrixVector(transformed0, projectionMatrix);    
           Vector3D point2 = multiplyMatrixVector(transformed1, projectionMatrix);     
           Vector3D point3 = multiplyMatrixVector(transformed2, projectionMatrix); 
           projectedTriangle = new ShadedTriangle(point1, point2, point3, dp);
           projectedTriangles.add(projectedTriangle);
-          rotationXMatrix.setDegree(rotationXMatrix.getDegree() + 0.1);
-          rotationZMatrix.setDegree(rotationZMatrix.getDegree() + 0.05);
+          //rotationXMatrix.setDegree(rotationXMatrix.getDegree() + 0.1);
+          //rotationZMatrix.setDegree(rotationZMatrix.getDegree() + 0.05);
         }
       }
     }
@@ -163,5 +173,22 @@ public class Engine
     cube.addTris(bottom2);
 
     return cube;
+  }
+  public Mesh createChunk(Chunk chunk)
+  {
+    Mesh chunkMesh = new Mesh();
+    for (int f = 0; f < chunk.getChunk().length - 1; f++) {
+      for (int r = 0; r < chunk.getChunk()[f].length; r++) {
+        for (int c = 0; c < chunk.getChunk()[f][r].length; c++) {
+          if (chunk.getChunk()[f + 1][r][c] == false) {
+            Triangle t1 = new Triangle(new Vector3D(c + 1, f + 1, r + 1), new Vector3D(c, f + 1, r + 1), new Vector3D(c, f + 1, r));
+            Triangle t2 = new Triangle(new Vector3D(c + 1, f + 1, r), new Vector3D(c + 1, f + 1, r + 1), new Vector3D(c, f + 1, r));  
+            chunkMesh.addTris(t1);
+            chunkMesh.addTris(t2);
+          }
+        }
+      }
+    }
+    return chunkMesh;
   }
 }

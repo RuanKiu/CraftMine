@@ -34,14 +34,13 @@ public class CustomPanel extends JPanel implements ActionListener
     super.paintComponent(g);
     Graphics2D g2 = (Graphics2D) g;
     g2.setStroke(stroke);
-    g2.setColor(Color.BLACK);
-    ArrayList<Triangle> triangles = engine.createProjections(getWidth(), getHeight());
-    for (Triangle triangle : triangles)
+    ArrayList<ShadedTriangle> triangles = engine.createProjections(getWidth(), getHeight());
+    for (ShadedTriangle triangle : triangles)
     {
       paintTriangle(g2, triangle);
     }
   }
-  public void paintTriangle(Graphics2D g2, Triangle triangle)
+  public void paintTriangle(Graphics2D g2, ShadedTriangle triangle)
   {
     double x1 = triangle.getVectors()[0].x();
     double y1 = triangle.getVectors()[0].y();
@@ -57,7 +56,9 @@ public class CustomPanel extends JPanel implements ActionListener
     p.addPoint((int) x1, (int) y1);
     p.addPoint((int) x2, (int) y2);
     p.addPoint((int) x3, (int) y3);
+    g2.setColor(new Color((float) triangle.r(), (float) triangle.g(), (float) triangle.b()));
     g2.fillPolygon(p);
+    g2.setColor(Color.BLACK);
     g2.drawPolygon(p);
   }
 }
