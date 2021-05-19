@@ -3,7 +3,7 @@ public class Chunk
   private boolean[][][] terrain;
   public Chunk()
   {
-    terrain = new boolean[2][16][16];
+    terrain = new boolean[10][64][64];
     for (int f = 0; f < terrain.length - 1; f++) {
       for (int r = 0; r < terrain[f].length; r++) {
         for (int c = 0; c < terrain[f][r].length;c++) {

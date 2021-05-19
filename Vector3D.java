@@ -5,6 +5,12 @@ public class Vector3D
   {
     x = y = z = 0;
   }
+  public Vector3D(Vector3D v)
+  {
+    x = v.x();
+    y = v.y();
+    z = v.z();
+  }
   public Vector3D(double x, double y, double z)
   {
     this.x = x;
