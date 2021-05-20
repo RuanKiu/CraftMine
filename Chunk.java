@@ -3,11 +3,14 @@ public class Chunk
   private boolean[][][] terrain;
   public Chunk()
   {
-    terrain = new boolean[10][64][64];
+    terrain = new boolean[4][16][16];
     for (int f = 0; f < terrain.length - 1; f++) {
       for (int r = 0; r < terrain[f].length; r++) {
         for (int c = 0; c < terrain[f][r].length;c++) {
-          terrain[f][r][c] = true;
+          if (Math.random() >= 0.5)
+            terrain[f][r][c] = true;
+          else
+            terrain[f][r][c] = false;
         }
       }
     }
