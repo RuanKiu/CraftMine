@@ -23,7 +23,7 @@ public class CustomPanel extends JPanel implements ActionListener, KeyListener, 
   private boolean wireframe, info;
   private double elapsed, current;
   private int lastX, lastY;
-  private boolean forward, backward, left, right;
+  private boolean forward, backward, left, right, up, down;
   public CustomPanel() 
   {
     setVisible(true);
@@ -55,7 +55,14 @@ public class CustomPanel extends JPanel implements ActionListener, KeyListener, 
     current = System.nanoTime();
     
     //engine.moveCamera(0, 0.001, 0);
-    
+    if (left)
+      engine.moveCamera(-0.01, 0, 0);
+    if (right)
+      engine.moveCamera(0.01, 0, 0); 
+    if (down)
+      engine.moveCamera(0, -0.01, 0);
+    if (up)
+      engine.moveCamera(0, 0.01, 0);
   }
 
   // Key event handling
@@ -64,13 +71,13 @@ public class CustomPanel extends JPanel implements ActionListener, KeyListener, 
     if (e.getKeyCode() == KeyEvent.VK_W)
       engine.moveCamera(0, 0, 0.01); 
     else if (e.getKeyCode() == KeyEvent.VK_D)
-      engine.moveCamera(0.01, 0, 0); 
+      right = true;
     else if (e.getKeyCode() == KeyEvent.VK_A)
-      engine.moveCamera(-0.01, 0, 0); 
+      left = true;
     else if (e.getKeyCode() == KeyEvent.VK_UP)
-      engine.moveCamera(0, 0.01, 0); 
+      up = true;
     else if (e.getKeyCode() == KeyEvent.VK_DOWN)
-      engine.moveCamera(0, -0.01, 0); 
+      down = true;
     
     switch (e.getKeyCode())
     {
@@ -80,6 +87,10 @@ public class CustomPanel extends JPanel implements ActionListener, KeyListener, 
   }
   public void keyReleased(KeyEvent e) 
   {
+    left = false;
+    right = false;
+    up = false;
+    down = false;
   }
   public void keyTyped(KeyEvent e) {}
 

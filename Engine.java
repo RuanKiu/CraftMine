@@ -30,7 +30,7 @@ public class Engine
     rotationYMatrix = Matrix4x4.makeRotationMatrix("y", 0); 
 
     // Transformation matrix
-    transformationMatrix = Matrix4x4.makeTranslationMatrix(-0.5, -5, 20);
+    transformationMatrix = Matrix4x4.makeTranslationMatrix(-8, -5, 10);
 
     // Model matrix
     modelMatrix = new Matrix4x4();
