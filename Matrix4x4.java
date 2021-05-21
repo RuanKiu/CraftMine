@@ -114,8 +114,8 @@ public class Matrix4x4
     Matrix4x4 m = new Matrix4x4();
     double verticalFOV = 1 / Math.tan(Math.atan(Math.tan(Math.toRadians(camera.getVerticalFOV()/2)) * w/h)); 
     double horizontalFOV = 1 / Math.tan(verticalFOV);
-    m.setValue(0, 0, horizontalFOV);
-    m.setValue(1, 1, -1 * verticalFOV);
+    m.setValue(0, 0, Math.abs(horizontalFOV));
+    m.setValue(1, 1, Math.abs(verticalFOV));
     m.setValue(2, 2, camera.getFar() / (camera.getFar() - camera.getNear()));
     m.setValue(3, 2, (-camera.getFar() * camera.getNear()) / (camera.getFar() - camera.getNear()));
     m.setValue(2, 3, 1);
@@ -168,5 +168,22 @@ public class Matrix4x4
     matrix.setValue(3, 1, -1 * Vector3D.vectorDotProduct(new Vector3D(sinYaw * sinPitch, cosPitch, cosYaw*sinPitch), pos)); 
     matrix.setValue(3, 2, -1 * Vector3D.vectorDotProduct(new Vector3D(sinYaw*cosPitch, -sinPitch, cosPitch * cosYaw), pos));
     matrix.setValue(3, 3, 1);
+  }
+  public static void createCameraTransformMatrix(Matrix4x4 matrix, Vector3D pos)
+  {
+    matrix.setValue(0, 3, -pos.x());
+    matrix.setValue(1, 3, -pos.y());
+    matrix.setValue(2, 3, -pos.z());
+    matrix.setValue(0, 0, 1);
+    matrix.setValue(1, 1, 1);
+    matrix.setValue(2, 2, 1);
+    matrix.setValue(3, 3, 1);
+  }
+  public static void createRHLookAtMatrix(Matrix4x4 m, Vector3D pos, Vector3D target, Vector3D up)
+  {
+    Vector3D subtracted = new Vector3D();
+    Vector3D.subtractVectors(subtracted, pos, target);
+    Vector3D zAxis = new Vector3D();
+    Vector3D.normalizeVector(zAxis, subtracted);
   }
 }

@@ -51,38 +51,37 @@ public class CustomPanel extends JPanel implements ActionListener, KeyListener, 
   public void actionPerformed(ActionEvent e)
   {
     repaint();
+    double speed = 0.1;
     elapsed = System.nanoTime() - current;
     current = System.nanoTime();
     
-    //engine.moveCamera(0, 0.001, 0);
     if (left)
-      engine.moveCamera(-0.01, 0, 0);
+      engine.moveCamera(-speed, 0, 0);
     if (right)
-      engine.moveCamera(0.01, 0, 0); 
+      engine.moveCamera(speed, 0, 0); 
     if (down)
-      engine.moveCamera(0, -0.01, 0);
+      engine.moveCamera(0, -speed, 0);
     if (up)
-      engine.moveCamera(0, 0.01, 0);
+      engine.moveCamera(0, speed, 0);
+    if (forward)
+      engine.moveCamera(0, 0, speed);
+    if (backward)
+      engine.moveCamera(0, 0, -speed);
   }
 
   // Key event handling
   public void keyPressed(KeyEvent e)
   {
-    if (e.getKeyCode() == KeyEvent.VK_W)
-      engine.moveCamera(0, 0, 0.01); 
-    else if (e.getKeyCode() == KeyEvent.VK_D)
-      right = true;
-    else if (e.getKeyCode() == KeyEvent.VK_A)
-      left = true;
-    else if (e.getKeyCode() == KeyEvent.VK_UP)
-      up = true;
-    else if (e.getKeyCode() == KeyEvent.VK_DOWN)
-      down = true;
-    
     switch (e.getKeyCode())
     {
       case KeyEvent.VK_F: wireframe = !wireframe; forward = true; break;
       case KeyEvent.VK_I: info = !info; break;
+      case KeyEvent.VK_W: forward = true; break;
+      case KeyEvent.VK_S: backward = true; break;
+      case KeyEvent.VK_SHIFT: down = true; break;
+      case KeyEvent.VK_SPACE: up = true; break;
+      case KeyEvent.VK_D: right = true; break;
+      case KeyEvent.VK_A: left = true; break;
     }
   }
   public void keyReleased(KeyEvent e) 
@@ -91,6 +90,8 @@ public class CustomPanel extends JPanel implements ActionListener, KeyListener, 
     right = false;
     up = false;
     down = false;
+    forward = false;
+    backward = false;
   }
   public void keyTyped(KeyEvent e) {}
 

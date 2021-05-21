@@ -34,7 +34,7 @@ public class Engine
 
     // Model matrix
     modelMatrix = new Matrix4x4();
-    updateWorldMatrix();
+    updateModelMatrix();
 
     // View matrix
     viewMatrix = new Matrix4x4();
@@ -55,7 +55,7 @@ public class Engine
     double horizontalFOV = 1.0 / Math.tan(verticalFOV);
     projectionMatrix.setValue(0, 0, horizontalFOV); 
   }
-  private void updateWorldMatrix()
+  private void updateModelMatrix()
   {
     modelMatrix = Matrix4x4.multiplyMatrix(rotationXMatrix, rotationYMatrix);
     modelMatrix = Matrix4x4.multiplyMatrix(rotationZMatrix, modelMatrix);
@@ -64,8 +64,8 @@ public class Engine
   public void updateViewMatrix()
   {
     Vector3D.addVectors(target, look, camera);
-    Matrix4x4.createLookAtViewTransform(viewMatrix, camera, target, up);
-    Matrix4x4.quickInverse(viewMatrix); 
+    Matrix4x4.createCameraTransformMatrix(viewMatrix, camera);
+    //Matrix4x4.quickInverse(viewMatrix); 
     //Matrix4x4.createFPSViewTransform(viewMatrix, camera, camera.getPitch(), camera.getYaw());
     System.out.println(viewMatrix);
   }
@@ -90,7 +90,7 @@ public class Engine
   public void moveCamera(double x, double y, double z)
   {
     //up.setValues(up.x() + x, up.y() + y, up.z() + z);
-    look.setValues(look.x() + x, look.y() + y, look.z() + z);
+    //look.setValues(look.x() + x, look.y() + y, look.z() + z);
     camera.setValues(camera.x() + x, camera.y() +  y, camera.z() + z);
     updateViewMatrix();
   }
@@ -100,7 +100,7 @@ public class Engine
   }
   public ArrayList<ShadedTriangle> createProjections()
   {
-    updateWorldMatrix();
+    updateModelMatrix();
     updateViewMatrix();
     
     ArrayList<ShadedTriangle> projectedTriangles = new ArrayList<ShadedTriangle>();
