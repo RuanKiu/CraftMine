@@ -54,39 +54,7 @@ public class Matrix4x4
 
     return output;
   }
-  public static Vector3D addVectors(Vector3D a, Vector3D b) 
-  {
-    return new Vector3D(a.x() + b.x(), a.y() + b.y(), a.z() + b.z());
-  }
-  public static Vector3D subtractVectors(Vector3D a, Vector3D b) {
-    return new Vector3D(a.x() - b.x(), a.y() - b.y(), a.z() - b.z());
-  }
-  public static Vector3D multiplyVector(Vector3D a, double d) {
-    return new Vector3D(a.x() * d, a.y() * d, a.z() * d);
-  }
-  public static Vector3D divideVector(Vector3D a, double d) {
-    return new Vector3D(a.x() / d, a.y() / d, a.z() / d);
-  }
-  public static double vectorDotProduct(Vector3D a, Vector3D b) {
-    return a.x() * b.x() + a.y() * b.y() + a.z() * b.z();
-  }
-  public static double vectorLength(Vector3D a) 
-  {
-    return Math.sqrt(vectorDotProduct(a, a));
-  }
-  public static Vector3D normalizeVector(Vector3D a)
-  {
-    double l = vectorLength(a);
-    return new Vector3D(a.x() / l, a.y() / l, a.z() / l);
-  }
-  public static Vector3D crossProduct(Vector3D a, Vector3D b)
-  {
-    Vector3D product = new Vector3D();
-    product.setX(a.y() * b.z() - a.z() * b.y());
-    product.setY(a.z() * b.x() - a.x() * b.z());
-    product.setZ(a.x() * b.y() - a.y() * b.x());
-    return product;
-  }
+
   public static Matrix4x4 multiplyMatrix(Matrix4x4 m1, Matrix4x4 m2)
   {
     Matrix4x4 m = new Matrix4x4();
@@ -166,7 +134,7 @@ public class Matrix4x4
     }
     return output;
   }
-  public void transform2D(Vector3D v, Vector3D t, Vector3D u)
+  public Matrix4x4 createLookAtViewTransform(Vector3D v, Vector3D t, Vector3D u)
   {
     Vector3D newForward = new Vector3D();
     Vector3D.subtractVectors(newForward, t, v);
@@ -181,8 +149,27 @@ public class Matrix4x4
     Vector3D newRight = new Vector3D();
     Vector3D.crossProduct(newRight, newUp, newForward);
 
+    Matrix4x4 matrix = new Matrix4x4();
+    matrix.setValue(0, 0, newRight.x()); matrix.setValue(0, 1, newRight.y()); matrix.setValue(0, 2, newRight.z());
+    matrix.setValue(1, 0, newUp.x()); matrix.setValue(1, 1, newUp.y()); matrix.setValue(1, 2, newUp.z());
+    matrix.setValue(2, 0, newForward.x()); matrix.setValue(2, 1, newForward.y()); matrix.setValue(2, 2, newForward.z());
+    matrix.setValue(3, 0, v.x()); matrix.setValue(3, 1, v.y()); matrix.setValue(3, 2, v.z()); matrix.setValue(3, 3, 1);
+    return matrix;
+  }
+  public Matrix4x4 createFPSViewTransform(Vector3D pos, double pitch, double yaw)
+  {
+    double cosPitch = Math.cos(Math.toRadians(pitch));
+    double sinPitch = Math.sin(Math.toRadians(pitch));
+    double cosYaw = Math.cos(Math.toRadians(yaw));
+    double sinYaw = Math.cos(Math.toRadians(yaw));
 
-
-
+    Matrix4x4 matrix = new Matrix4x4();
+    matrix.setValue(0, 0, cosYaw); matrix.setValue(0, 1, sinYaw * sinPitch); matrix.setValue(0, 2, sinYaw * cosPitch);
+    matrix.setValue(1, 0, 0); matrix.setValue(1, 1, cosPitch); matrix.setValue(1, 2, -sinPitch);
+    matrix.setValue(2, 0, -sinYaw); matrix.setValue(2, 1, sinPitch * cosYaw); matrix.setValue(2, 2, cosPitch * cosYaw);
+    matrix.setValue(3, 0, -1 * Vector3D.vectorDotProduct(new Vector3D(cosYaw, 0, -sinYaw), pos));
+    matrix.setValue(3, 1, -1 * Vector3D.vectorDotProduct(new Vector3D(sinYaw * sinPitch, cosPitch, cosYaw*cosPitch), pos)); 
+    matrix.setValue(3, 2, -1 * Vector3D.vectorDotProduct(new Vector3D(sinYaw*cosPitch, -sinPitch, cosPitch * cosYaw), pos));
+    return matrix;
   }
 }
