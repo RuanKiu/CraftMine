@@ -14,14 +14,14 @@ public class Engine
   private Vector3D target; 
   public Engine()
   {
-    camera = new Camera();
+    camera = new Camera(1, 1, 1);
     projectionMatrix = Matrix4x4.makeProjectionMatrix(camera, 700, 700);
     meshes = new ArrayList<Mesh>();
     worldLightDirection = new WorldLight(-1, -2, -1);
     Vector3D.normalizeVector(worldLightDirection, worldLightDirection);
+    target = new Vector3D();
     look = new Vector3D(0, 0, 1); 
     up = new Vector3D(0, 1, 0);
-    target = new Vector3D();
     Vector3D.addVectors(target, look, camera);
 
     // Rotation matrix
@@ -89,7 +89,7 @@ public class Engine
   }
   public void moveCamera(double x, double y, double z)
   {
-    up.setValues(up.x() + x, up.y() + y, up.z() + z);
+    //up.setValues(up.x() + x, up.y() + y, up.z() + z);
     look.setValues(look.x() + x, look.y() + y, look.z() + z);
     camera.setValues(camera.x() + x, camera.y() +  y, camera.z() + z);
     updateViewMatrix();

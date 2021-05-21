@@ -50,7 +50,7 @@ public class Matrix4x4
     m.setValue(2, 0, matrix.getValue(0, 2)); m.setValue(2, 1, matrix.getValue(1, 2)); m.setValue(2, 2, matrix.getValue(2, 2));
     m.setValue(3, 0, -(m.getValue(3, 0) * matrix.getValue(0, 0) + m.getValue(3, 1) * matrix.getValue(1, 0) + m.getValue(3, 2) * matrix.getValue(2, 0)));
     m.setValue(3, 1, -(m.getValue(3, 0) * matrix.getValue(0, 1) + m.getValue(3, 1) * matrix.getValue(1, 1) + m.getValue(3, 2) * matrix.getValue(2, 1)));
-    m.setValue(3, 2, -(m.getValue(3, 0) * matrix.getValue(0, 2) + m.getValue(3, 1) * matrix.getValue(1, 0) + m.getValue(3, 2) * matrix.getValue(2, 2)));
+    m.setValue(3, 2, -(m.getValue(3, 0) * matrix.getValue(0, 2) + m.getValue(3, 1) * matrix.getValue(1, 2) + m.getValue(3, 2) * matrix.getValue(2, 2)));
     m.setValue(3, 3, 1);
     matrix = m;
   }
