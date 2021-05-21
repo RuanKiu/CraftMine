@@ -5,9 +5,13 @@ public class Engine
   private Matrix4x4 projectionMatrix;
   private Matrix4x4 rotationXMatrix, rotationZMatrix, rotationYMatrix;
   private Matrix4x4 transformationMatrix;
-  private Matrix4x4 worldMatrix;
+  private Matrix4x4 modelMatrix;
+  private Matrix4x4 viewMatrix;
   private ArrayList<Mesh> meshes;
   private WorldLight worldLightDirection;
+  private Vector3D look;
+  private Vector3D up;
+  private Vector3D target; 
   public Engine()
   {
     camera = new Camera();
@@ -15,6 +19,10 @@ public class Engine
     meshes = new ArrayList<Mesh>();
     worldLightDirection = new WorldLight(-1, -2, -1);
     Vector3D.normalizeVector(worldLightDirection, worldLightDirection);
+    look = new Vector3D(0, 0, 1); 
+    up = new Vector3D(0, 1, 0);
+    target = new Vector3D();
+    Vector3D.addVectors(target, look, camera);
 
     // Rotation matrix
     rotationXMatrix = Matrix4x4.makeRotationMatrix("x" , 0); 
@@ -22,11 +30,15 @@ public class Engine
     rotationYMatrix = Matrix4x4.makeRotationMatrix("y", 0); 
 
     // Transformation matrix
-    transformationMatrix = Matrix4x4.makeTranslationMatrix(-0.5, -5, 30);
+    transformationMatrix = Matrix4x4.makeTranslationMatrix(-0.5, -5, 20);
 
-    // World matrix
-    worldMatrix = new Matrix4x4();
+    // Model matrix
+    modelMatrix = new Matrix4x4();
     updateWorldMatrix();
+
+    // View matrix
+    viewMatrix = new Matrix4x4();
+    updateViewMatrix();
 
     // Adding a cube
     Mesh meshCube = Mesh.createCube(); 
@@ -45,22 +57,65 @@ public class Engine
   }
   private void updateWorldMatrix()
   {
-    worldMatrix = Matrix4x4.multiplyMatrix(rotationXMatrix, rotationYMatrix);
-    worldMatrix = Matrix4x4.multiplyMatrix(rotationZMatrix, worldMatrix);
-    worldMatrix = Matrix4x4.multiplyMatrix(transformationMatrix, worldMatrix);
+    modelMatrix = Matrix4x4.multiplyMatrix(rotationXMatrix, rotationYMatrix);
+    modelMatrix = Matrix4x4.multiplyMatrix(rotationZMatrix, modelMatrix);
+    modelMatrix = Matrix4x4.multiplyMatrix(transformationMatrix, modelMatrix);
+  }
+  public void updateViewMatrix()
+  {
+    Vector3D.addVectors(target, look, camera);
+    Matrix4x4.createLookAtViewTransform(viewMatrix, camera, target, up);
+    Matrix4x4.quickInverse(viewMatrix); 
+    //Matrix4x4.createFPSViewTransform(viewMatrix, camera, camera.getPitch(), camera.getYaw());
+    System.out.println(viewMatrix);
+  }
+  public void rotateCamera(double pitchChange, int yawChange)
+  {
+    if (camera.getYaw() + yawChange > 360) 
+      camera.setYaw(360);
+    else if (camera.getYaw() + yawChange < 0) 
+      camera.setYaw(0);
+    else 
+      camera.setYaw(camera.getYaw() + yawChange);
+
+    if (camera.getPitch() + pitchChange > 90) 
+      camera.setPitch(90);
+    else if (camera.getPitch() + pitchChange < -90)
+      camera.setPitch(-90);
+    else
+      camera.setPitch(camera.getPitch() + pitchChange);
+
+    updateViewMatrix();
+  }
+  public void moveCamera(double x, double y, double z)
+  {
+    up.setValues(up.x() + x, up.y() + y, up.z() + z);
+    look.setValues(look.x() + x, look.y() + y, look.z() + z);
+    camera.setValues(camera.x() + x, camera.y() +  y, camera.z() + z);
+    updateViewMatrix();
+  }
+  public Camera getCamera()
+  {
+    return camera;
   }
   public ArrayList<ShadedTriangle> createProjections()
   {
+    updateWorldMatrix();
+    updateViewMatrix();
+    
     ArrayList<ShadedTriangle> projectedTriangles = new ArrayList<ShadedTriangle>();
     for (Mesh m : meshes)
     {
       for (Triangle triangle : m.getTris())
       {
         ShadedTriangle projectedTriangle;
-        updateWorldMatrix();
-        Vector3D point0 = Matrix4x4.multiplyMatrixVector(triangle.getVectors()[0], worldMatrix);
-        Vector3D point1 = Matrix4x4.multiplyMatrixVector(triangle.getVectors()[1], worldMatrix);
-        Vector3D point2 = Matrix4x4.multiplyMatrixVector(triangle.getVectors()[2], worldMatrix);
+        Vector3D point0 = Matrix4x4.multiplyMatrixVector(triangle.getVectors()[0], modelMatrix);
+        Vector3D point1 = Matrix4x4.multiplyMatrixVector(triangle.getVectors()[1], modelMatrix);
+        Vector3D point2 = Matrix4x4.multiplyMatrixVector(triangle.getVectors()[2], modelMatrix);
+        
+        Matrix4x4.multiplyMatrixVector(point0, point0, viewMatrix);    
+        Matrix4x4.multiplyMatrixVector(point1, point1, viewMatrix);     
+        Matrix4x4.multiplyMatrixVector(point2, point2, viewMatrix); 
 
         Vector3D normal = new Vector3D();
         Vector3D line1 = new Vector3D();
@@ -84,8 +139,11 @@ public class Engine
           dp -= (Math.abs(100 - (point0.z() + point1.z() + point2.z())/3) / (100 + Math.abs(point0.z() + point1.z() + point2.z()))) / 4;
 
           Matrix4x4.multiplyMatrixVector(point0, point0, projectionMatrix);    
+          Vector3D.divideVector(point0, point0, point0.w());
           Matrix4x4.multiplyMatrixVector(point1, point1, projectionMatrix);     
+          Vector3D.divideVector(point1, point1, point1.w());
           Matrix4x4.multiplyMatrixVector(point2, point2, projectionMatrix); 
+          Vector3D.divideVector(point2, point2, point2.w());
           projectedTriangle = new ShadedTriangle(point0, point1, point2, dp);
           projectedTriangles.add(projectedTriangle);
         }
